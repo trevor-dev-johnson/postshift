@@ -1,0 +1,9 @@
+[project]
+name = "postshift"
+version = "0.0.0"
+description = ""
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
