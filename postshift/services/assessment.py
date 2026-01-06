@@ -1,18 +1,32 @@
-from __future__ import annotations
+from dataclasses import dataclass
+from postshift.core.energy import calculate_energy, EnergyLevel
 
-from postshift.core.energy import EnergyConfig, EnergyEngine
-from postshift.core.rules import penalty_for_blocks
-from postshift.models.block import TimeBlock
-from postshift.models.user import UserProfile
-
-
-def assess(user: UserProfile, blocks: list[TimeBlock], start_energy: float | None = None) -> dict[str, float]:
-    config = EnergyConfig(
-        energy_max=user.energy_max,
-        decay_per_hour=user.decay_per_hour,
+@dataclass
+class AssessmentResult:
+    energy: EnergyLevel
+    warning: str | None = None
+    
+def assess_energy(
+    *,
+    hours_slept: float,
+    night_shift: bool,
+    hours_since_shift_end: float,
+    consecutive_shifts: int,
+) -> AssessmentResult:
+    
+    
+    energy = calculate_energy(
+        hours_slept=hours_slept,
+        night_shift=night_shift,
+        hours_since_shift_end=hours_since_shift_end,
+        consecutive_shifts=consecutive_shifts,
     )
-    engine = EnergyEngine(config)
-    energy0 = user.energy_max if start_energy is None else start_energy
-    energy_end = engine.energy_after_blocks(energy0, blocks)
-    penalty = penalty_for_blocks(blocks)
-    return {"energy_end": float(energy_end), "penalty": float(penalty)}
+
+    warning = None
+
+    if energy == "dead":
+        warning = "Recovery strongly recommended. Avoid optional effort."
+    elif energy == "low":
+        warning = "Low energy. Stick to light tasks and recovery."
+
+    return AssessmentResult(energy=energy, warning=warning)

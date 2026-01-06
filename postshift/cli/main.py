@@ -1,23 +1,27 @@
-from __future__ import annotations
+import typer
+from postshift.services.assessment import assess_energy
 
-import argparse
+app = typer.Typer(help="PostShift — assess what you're actually capable of after a shift.")
 
+@app.command()
+def assess(
+    hours_slept: float = typer.Option(..., help="Hours slept since last shift"),
+    night_shift: bool = typer.Option(False, help="Was the last shift a night shift"),
+    hours_since_shift_end: float = typer.Option(..., help="Hours since shift ended"),
+    consecutive_shifts: int = typer.Option(1, help="Number of consecutive shifts worked"),
+):
+    result = assess_energy(
+        hours_slept=hours_slept,
+        night_shift=night_shift,
+        hours_since_shift_end=hours_since_shift_end,
+        consecutive_shifts=consecutive_shifts,
+    )
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="postshift")
-    parser.add_argument("--version", action="store_true")
-    return parser
+    typer.echo(f"Energy state: {result.energy}")
 
-
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    if args.version:
-        print("postshift 0.0.0")
-        return 0
-    parser.print_help()
-    return 0
+    if result.warning:
+        typer.echo(f"⚠ {result.warning}")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    app()
