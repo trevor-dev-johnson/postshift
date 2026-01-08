@@ -1,8 +1,15 @@
-from __future__ import annotations
+import sqlite3
 
-from dataclasses import dataclass
+EVENTS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
+"""
 
-
-@dataclass(frozen=True)
-class StorageConfig:
-    version: int = 1
+def initialize_schema(conn: sqlite3.Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(EVENTS_SCHEMA)
+    conn.commit()
